@@ -62,10 +62,21 @@
     });
   }
 
+  // Some wallets (Rabby on launch day, for one) refuse to build a transaction on a chain they
+  // cannot simulate, reporting it as a rejection. Handing them gas, value and chain explicitly
+  // is enough. Gas comes from the public RPC with a 25% margin.
   function send(tx) {
     return connect().then(function (from) {
       tx.from = from;
-      return provider().request({ method: 'eth_sendTransaction', params: [tx] });
+      tx.value = tx.value || '0x0';
+      tx.chainId = CHAIN_HEX;
+      if (tx.gas) return tx;
+      return publicRpc('eth_estimateGas', [{ from: from, to: tx.to, data: tx.data, value: tx.value }]).then(function (g) {
+        tx.gas = '0x' + (BigInt(g) * 125n / 100n).toString(16);
+        return tx;
+      });
+    }).then(function (ready) {
+      return provider().request({ method: 'eth_sendTransaction', params: [ready] });
     });
   }
 
