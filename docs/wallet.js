@@ -63,16 +63,20 @@
   }
 
   // Some wallets (Rabby on launch day, for one) refuse to build a transaction on a chain they
-  // cannot simulate, reporting it as a rejection. Handing them gas, value and chain explicitly
-  // is enough. Gas comes from the public RPC with a 25% margin.
+  // cannot simulate, reporting it as a rejection, and a wallet may be pointed at an RPC that
+  // fails basic calls. So gas limit and gas price come from the official RPC and are handed to
+  // the wallet ready-made: limit with a 25% margin, price with 20%.
   function send(tx) {
     return connect().then(function (from) {
       tx.from = from;
       tx.value = tx.value || '0x0';
       tx.chainId = CHAIN_HEX;
-      if (tx.gas) return tx;
-      return publicRpc('eth_estimateGas', [{ from: from, to: tx.to, data: tx.data, value: tx.value }]).then(function (g) {
-        tx.gas = '0x' + (BigInt(g) * 125n / 100n).toString(16);
+      return Promise.all([
+        tx.gas ? null : publicRpc('eth_estimateGas', [{ from: from, to: tx.to, data: tx.data, value: tx.value }]),
+        tx.gasPrice ? null : publicRpc('eth_gasPrice', [])
+      ]).then(function (r) {
+        if (r[0]) tx.gas = '0x' + (BigInt(r[0]) * 125n / 100n).toString(16);
+        if (r[1]) tx.gasPrice = '0x' + (BigInt(r[1]) * 120n / 100n).toString(16);
         return tx;
       });
     }).then(function (ready) {
@@ -96,7 +100,9 @@
 
   function describeError(e) {
     if (!e) return 'Unknown error.';
-    if (e.code === 4001) return 'Cancelled in the wallet.';
+    // Wallets also use 4001 for their own internal failures, so keep whatever they said.
+    var said = e.message && !/user (rejected|denied|cancel)/i.test(e.message) ? ' The wallet said: ' + e.message : '';
+    if (e.code === 4001) return 'The wallet did not send the transaction.' + said;
     return e.message || String(e);
   }
 
