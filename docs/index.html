@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arc Contract Check — who can change this contract?</title>
+<meta name="description" content="Paste a contract address on Arc mainnet and see whether its code can be replaced, and by whom: a single key, a Safe with its threshold, or a timelock with its delay. Record what you saw onchain, so a later change is visible to everyone.">
+<meta property="og:title" content="Arc Contract Check — who can change this contract?">
+<meta property="og:description" content="Whether an Arc contract can be upgraded, who holds that power, and a public onchain record of it.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@Def7771">
+<meta name="theme-color" content="#0a0e1c">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233b6eff'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0a0e1c; --bg2:#0d1226; --card:#111730;
+  --border:#232c4d; --border-hover:#33406b;
+  --blue:#3b6eff; --blue-soft:#182252; --blue-text:#7ea0ff; --blue-bright:#9db8ff;
+  --yellow:#ffcf40; --green:#3fbf87; --red:#ff6b6b;
+  --text:#eef1fb; --muted:#8791b3; --muted2:#7a84a8;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased}
+a{color:var(--blue-text); text-decoration:none}
+a:hover{color:var(--blue-bright)}
+code,.mono{font-family:var(--mono); font-size:.92em}
+[hidden]{display:none!important}
+.wrap{max-width:920px; margin:0 auto; padding:0 20px}
+
+header{border-bottom:1px solid var(--border); background:var(--bg2)}
+.head-in{display:flex; align-items:center; justify-content:space-between; gap:16px; padding-block:16px; flex-wrap:wrap}
+.back{display:inline-flex; align-items:center; min-height:32px; font-size:14px; color:var(--muted)}
+.back:hover{color:var(--text)}
+.head-links{display:flex; gap:14px; flex-wrap:wrap}
+.head-links a{font-size:14px; min-height:32px; display:inline-flex; align-items:center}
+
+.hero{padding:40px 0 20px}
+h1{margin:0 0 10px; font-size:32px; line-height:1.2; letter-spacing:-.02em}
+.sub{margin:0; color:var(--muted); font-size:16.5px; max-width:64ch}
+.stamp{margin-top:14px; font-size:13px; color:var(--muted2)}
+.dot{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:7px; vertical-align:middle}
+.dot.stale{background:var(--yellow)}
+.dot.dead{background:var(--red)}
+
+section{padding:18px 0}
+h2{font-size:19px; margin:0 0 4px; letter-spacing:-.01em}
+.note{color:var(--muted2); font-size:13.5px; margin:0 0 14px; max-width:70ch}
+
+.panel{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px}
+.row{display:flex; gap:10px; flex-wrap:wrap}
+input[type=text]{flex:1 1 320px; min-width:0; background:var(--bg); border:1px solid var(--border);
+  color:var(--text); border-radius:10px; padding:11px 14px; font-size:15px; font-family:var(--mono); min-height:44px}
+input[type=text]:focus{outline:none; border-color:var(--blue)}
+button.go{background:var(--blue); border:1px solid var(--blue); color:#fff; border-radius:10px;
+  padding:11px 22px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; min-height:44px}
+button.go:hover{background:#2f5ee0}
+button.go[disabled]{opacity:.6; cursor:default}
+button.ghost{background:transparent; border:1px solid var(--border); color:var(--text); border-radius:10px;
+  padding:10px 18px; font-size:14.5px; cursor:pointer; font-family:inherit; min-height:42px}
+button.ghost:hover{border-color:var(--border-hover)}
+button.ghost[disabled]{opacity:.6; cursor:default}
+.samples{margin-top:12px; font-size:13px; color:var(--muted2); display:flex; gap:6px 14px; flex-wrap:wrap}
+.samples button{background:none; border:none; color:var(--blue-text); cursor:pointer; font-size:13px; padding:0; font-family:inherit}
+.samples button:hover{color:var(--blue-bright); text-decoration:underline}
+.err{color:var(--red); font-size:14.5px; margin-top:12px}
+
+.verdict{border-radius:12px; padding:16px 18px; font-size:15.5px; line-height:1.55; margin-bottom:14px}
+.verdict strong{color:#fff}
+.verdict.ok{background:rgba(63,191,135,.10); border:1px solid rgba(63,191,135,.3)}
+.verdict.warn{background:rgba(255,207,64,.09); border:1px solid rgba(255,207,64,.32)}
+.verdict.info{background:var(--blue-soft); border:1px solid #2a3a7a}
+
+.facts{background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden}
+.fact{display:grid; grid-template-columns:minmax(140px,30%) 1fr; gap:4px 16px; padding:11px 16px; border-bottom:1px solid var(--border); font-size:14.5px}
+.fact:last-child{border-bottom:none}
+.fact .lab{color:var(--muted)}
+.fact .val{min-width:0; overflow-wrap:anywhere}
+.fact .val .mono{font-size:13.5px}
+.fact .hint{display:block; color:var(--muted2); font-size:13px; margin-top:2px}
+
+.limits{border-left:3px solid var(--yellow); background:var(--card); border-top:1px solid var(--border);
+  border-right:1px solid var(--border); border-bottom:1px solid var(--border); border-radius:12px;
+  padding:14px 16px; color:var(--muted); font-size:13.5px; margin-top:14px}
+
+.snap-actions{margin-top:14px}
+.changes{margin:10px 0 0; padding:0; list-style:none}
+.changes li{padding:8px 0; border-top:1px solid var(--border); font-size:14px; overflow-wrap:anywhere}
+.changes .was{color:var(--muted2)}
+.status{font-size:14px; color:var(--muted); margin-top:10px; overflow-wrap:anywhere}
+.status.ok{color:#8fe0bd}
+.status.bad{color:var(--red)}
+
+footer{border-top:1px solid var(--border); margin-top:30px; padding:22px 0 40px; color:var(--muted2); font-size:13.5px}
+
+@media (max-width:640px){
+  h1{font-size:25px}
+  .hero{padding:28px 0 16px}
+  .fact{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap head-in">
+    <a class="back" href="https://deftools.xyz/">&larr;&nbsp; deftools.xyz</a>
+    <div class="head-links">
+      <a href="https://deftools.xyz/arc.html">Arc fees in dollars</a>
+      <a href="https://github.com/araxis33/arc-contract-check" target="_blank" rel="noopener">Source</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <h1>Who can change this contract?</h1>
+    <p class="sub">Paste a contract address on Arc mainnet. The page reads the chain from your browser
+      and tells you whether the code behind that address can be replaced, and who holds that power:
+      one key, a multisig, or a timelock. Then you can pin what you saw onchain, so if it ever changes,
+      the difference is visible to everyone.</p>
+    <div class="stamp" id="stamp"><span class="dot stale"></span>Connecting to Arc mainnet&hellip;</div>
+  </div>
+
+  <section>
+    <div class="panel">
+      <form class="row" id="form" autocomplete="off">
+        <input type="text" id="addr" placeholder="0x… contract address on Arc" spellcheck="false" aria-label="Contract address">
+        <button class="go" id="check" type="submit">Check</button>
+      </form>
+      <div class="samples">
+        <span>Try:</span>
+        <button type="button" data-sample="0x3600000000000000000000000000000000000000">USDC on Arc</button>
+        <button type="button" id="sample-log" hidden>this page's own log contract</button>
+      </div>
+      <div class="err" id="err" hidden></div>
+    </div>
+  </section>
+
+  <section id="report" hidden>
+    <div class="verdict" id="verdict"></div>
+    <div class="facts" id="facts"></div>
+    <div class="limits">
+      <strong>What this does not see.</strong> Role-based permissions (<code>AccessControl</code>),
+      upgrade functions with custom names, pause switches, and anything a contract lets its owner do
+      besides upgrading. A clean result narrows the question; it is not an audit.
+    </div>
+  </section>
+
+  <section id="snapshot" hidden>
+    <h2>Onchain record</h2>
+    <p class="note" id="snap-note"></p>
+    <div class="panel">
+      <div id="snap-summary">&hellip;</div>
+      <ul class="changes" id="changes" hidden></ul>
+      <div class="snap-actions">
+        <button class="ghost" id="record" type="button">Record this reading on Arc</button>
+      </div>
+      <div class="status" id="rec-status" hidden></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    Reads <code>rpc.mainnet.arc.io</code> directly from your browser; there is no server.
+    Recording sends one transaction from your own wallet to
+    <span id="foot-log">the log contract</span>. Open source on
+    <a href="https://github.com/araxis33/arc-contract-check" target="_blank" rel="noopener">GitHub</a>.
+    Part of <a href="https://deftools.xyz/">deftools.xyz</a>.
+  </div>
+</footer>
+
+<script src="deployment.js"></script>
+<script src="check.js"></script>
+<script src="wallet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
