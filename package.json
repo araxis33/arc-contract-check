@@ -4,7 +4,8 @@
   "description": "Who can change a contract on Arc, and a public onchain record of it",
   "scripts": {
     "test": "hardhat test",
-    "build": "hardhat compile"
+    "build": "hardhat compile",
+    "export": "hardhat run scripts/export-artifact.js"
   },
   "author": "",
   "license": "MIT",
