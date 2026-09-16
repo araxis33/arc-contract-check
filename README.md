@@ -56,9 +56,10 @@ Snapshots are kept in storage rather than only in events because the public Arc 
 | | |
 |---|---|
 | Network | Arc mainnet, chain ID 5042 |
-| Address | *deployment pending* |
+| Address | [`0x578c2adefd04b7da3706a66f3157930704485702`](https://araxis33.github.io/arc-contract-check/?address=0x578c2adefd04b7da3706a66f3157930704485702) |
+| Deployed | block 21 140 316, tx `0x2cd277b5…fe8095`; runtime code on chain identical to [`docs/ContractCheckLog.json`](docs/ContractCheckLog.json) |
 | Compiler | solc 0.8.28, EVM `cancun`, optimizer 200 runs |
-| Deploy cost | ~581 000 gas, about $0.012 at the 20 gwei floor |
+| Deploy cost | 575 746 gas, $0.037 at launch-day gas prices |
 
 ## Develop
 
