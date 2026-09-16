@@ -51,7 +51,8 @@ contract ContractCheckLog {
 
     /// @param target The contract being described.
     /// @param implementation Implementation behind a proxy, or zero if the target is not a proxy.
-    /// @param admin Upgrade admin read from the proxy's admin slot, or zero if none.
+    /// @param admin Whoever can replace that implementation: the admin slot for a transparent
+    /// proxy, owner() for a UUPS proxy, the beacon's owner() for a beacon proxy. Zero if none.
     /// @param owner Result of owner() on the target, or zero if it has none.
     /// @param readAtBlock The block the three values above were read at.
     /// @return index Position of the new snapshot in the target's history.
