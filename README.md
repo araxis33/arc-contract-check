@@ -7,10 +7,10 @@ whether the code behind it can be replaced, and what holds that power — a sing
 its threshold, or a timelock with its delay. Then pin what you saw onchain, so if it ever changes,
 the difference is visible to everyone who checks after you.
 
-**Live:** https://araxis33.github.io/arc-contract-check/
+**Live:** https://check.deftools.xyz/
 
 Try it on USDC's own interface on Arc,
-[`0x3600…0000`](https://araxis33.github.io/arc-contract-check/?address=0x3600000000000000000000000000000000000000):
+[`0x3600…0000`](https://check.deftools.xyz/?address=0x3600000000000000000000000000000000000000):
 it is a proxy in the ZeppelinOS layout, and on 16 September 2026 both its upgrade admin and its
 `owner()` were accounts with no code. The chain cannot say how those keys are held, only that
 each is one key rather than a multisig or a timelock. That is exactly the kind of fact this tool
@@ -56,7 +56,7 @@ Snapshots are kept in storage rather than only in events because the public Arc 
 | | |
 |---|---|
 | Network | Arc mainnet, chain ID 5042 |
-| Address | [`0x578c2adefd04b7da3706a66f3157930704485702`](https://araxis33.github.io/arc-contract-check/?address=0x578c2adefd04b7da3706a66f3157930704485702) |
+| Address | [`0x578c2adefd04b7da3706a66f3157930704485702`](https://check.deftools.xyz/?address=0x578c2adefd04b7da3706a66f3157930704485702) |
 | Deployed | block 21 140 316, tx `0x2cd277b5…fe8095`; runtime code on chain identical to [`docs/ContractCheckLog.json`](docs/ContractCheckLog.json) |
 | Compiler | solc 0.8.28, EVM `cancun`, optimizer 200 runs |
 | Deploy cost | 575 746 gas, $0.037 at launch-day gas prices |
